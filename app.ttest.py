@@ -315,12 +315,35 @@ else:
                                   font=dict(color='white' if row['status'] in ['red','green'] else 'black')))
 
         fig_h = go.Figure(data=go.Heatmap(
-            z=res_df['status_code'], x=res_df['測站'], y=res_df['測項'],
-            colorscale=[[0,'#BDC3C7'],[0.25,'#BDC3C7'],[0.25,'#2ECC71'],[0.5,'#2ECC71'],
-                        [0.5,'#F1C40F'],[0.75,'#F1C40F'],[0.75,'#E74C3C'],[1,'#E74C3C']],
-            zmin=-1, zmax=2, hovertemplate="狀態: %{text}", text=res_df['status_text']
+            z=res_df['status_code'], 
+            x=res_df['測站'], 
+            y=res_df['測項'],
+            colorscale=[
+                [0,'#BDC3C7'],
+                [0.25,'#BDC3C7'],
+                [0.25,'#2ECC71'],
+                [0.5,'#2ECC71'],
+                [0.5,'#F1C40F'],
+                [0.75,'#F1C40F'],
+                [0.75,'#E74C3C'],
+                [1,'#E74C3C']
+            ],
+            zmin=-1,
+            zmax=2, 
+            hovertemplate="狀態: %{text}", 
+            text=res_df['status_text'],
+            xgap = 5,  #數值愈大，線條越粗
+            ygap = 5   #數值愈大，線條越粗
         ))
-        fig_h.update_layout(annotations=annotations, height=400)
+        
+        fig_h.update_layout(
+            annotations=annotations,
+            height=400,
+            plot_bgcolor = 'white',  #確保背景是白色，這樣gap就會變成白線
+            margin = dict(l = 0, r= 0, t = 10, b= 0),
+            xaxis = dict(showgrid=False, zeroline=False),
+            yaxis = dict(showgrid=False, zeroline=False)
+        )
         st.plotly_chart(fig_h, use_container_width=True)
 
         st.divider()
@@ -380,6 +403,7 @@ else:
         st.error(f"❌ 讀取檔案時發生錯誤：{e}")
 
         st.warning("請確保您上傳的是有效的 Excel 檔，且格式與範本一致。")
+
 
 
 
