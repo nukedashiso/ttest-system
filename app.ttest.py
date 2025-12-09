@@ -61,7 +61,7 @@ def process_censored_data(row):
     val_str = str(val).strip().upper()
     
     # 2. 處理 "ND"
-    if "ND" or "N.D." in val_str:
+    if "ND" in val_str or "N.D." in val_str:
         if pd.notna(mdl):
             return mdl # 依需求：ND採用MDL
         else:
@@ -165,14 +165,11 @@ def perform_stats(df_sub):
         is_worse = True 
     else:
         is_worse = diff > 0 
+        
     # 燈號設定
     if is_significant:
         status = "red"
-        # 雖然都是紅燈，但建議文字還是要區分一下方向，不然使用者會困惑
-        if is_worse:
-            status_text = "具顯著變化"
-        else:
-            status_text = "具顯著變化" # 或是 "顯著改善"
+        status_text = "具顯著變化"
     else:
         status = "green"
         status_text = "無顯著變化"
@@ -452,14 +449,11 @@ else:
                 
                 fig_est.update_layout(title_text=f"狀態: {res['status_text']} (P={res['p_val']:.4f})")
                 st.plotly_chart(fig_est, use_container_width=True)
-
-    except Exception as e:
-        st.error(f"發生未預期的錯誤: {e}")
-        st.warning("請檢查 Excel 格式是否正確，或嘗試重新整理頁面。")
+                
     except Exception as e:
         st.error(f"❌ 讀取檔案時發生錯誤：{e}")
-
         st.warning("請確保您上傳的是有效的 Excel 檔，且格式與範本一致。")
+
 
 
 
