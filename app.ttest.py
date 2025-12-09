@@ -179,7 +179,7 @@ def perform_stats(df_sub):
         'test_method': test_method, 'status': status, 'status_text': status_text,
         'unit': unit,
         'lower_limit': lower_limit,
-        'upper_limit : upper_limit
+        'upper_limit' : upper_limit
     }
 
 # ==========================================
@@ -454,6 +454,7 @@ else:
         st.error(f"❌ 讀取檔案時發生錯誤：{e}")
 
         st.warning("請確保您上傳的是有效的 Excel 檔，且格式與範本一致。")
+
 
 
 
