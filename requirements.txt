@@ -3,4 +3,5 @@ pandas
 numpy
 scipy
 matplotlib
-ploty
+plotly
+
