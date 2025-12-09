@@ -42,8 +42,8 @@ def process_censored_data(row):
     處理含有 < 或 ND 的資料
     邏輯修正：
     1. ND -> 取 MDL 值 (需確保 MDL 為數字)
-    2. <數值 -> 取數值的一半
-    3. 只有 < 符號 -> 嘗試取 MDL 的一半
+    2. <數值 -> 取數值
+    3. 只有 < 符號 -> 嘗試取 MDL
     """
     val = row['數值']
     
@@ -73,11 +73,11 @@ def process_censored_data(row):
             # 情況 A: <0.05 -> 切割出 0.05
             num_text = val_str.replace("<", "").strip()
             if num_text:
-                return float(num_text) / 2
+                return float(num_text)
             
-            # 情況 B: 只有 "<" 符號 -> 嘗試使用 MDL/2
+            # 情況 B: 只有 "<" 符號 -> 嘗試使用 MDL
             elif pd.notna(mdl):
-                return mdl / 2
+                return mdl
             else:
                 return np.nan
         except:
@@ -380,3 +380,4 @@ else:
         st.error(f"❌ 讀取檔案時發生錯誤：{e}")
 
         st.warning("請確保您上傳的是有效的 Excel 檔，且格式與範本一致。")
+
