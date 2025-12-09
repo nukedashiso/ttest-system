@@ -283,12 +283,11 @@ else:
 
         # Dashboard 顯示
         st.subheader("1. 監測總覽")
-        c1, c2, c3, c4 = st.columns(4)
+        c1, c2, c3 = st.columns(3)
         if 'status' in res_df.columns:
-            c1.metric("🔴 具顯著變化/超標", len(res_df[res_df['status'] == 'red']))
-            c2.metric("🟡 具顯著變化", len(res_df[res_df['status'] == 'yellow']))
-            c3.metric("🟢 無顯著變化", len(res_df[res_df['status'] == 'green']))
-            c4.metric("⚪ 數據不足", len(res_df[res_df['status'] == 'gray']))
+            c1.metric("🔴 具顯著變化", len(res_df[res_df['status'] == 'red']))
+            c2.metric("🟢 無顯著變化", len(res_df[res_df['status'] == 'green']))
+            c3.metric("⚪ 數據不足", len(res_df[res_df['status'] == 'gray']))
 
         st.divider()
         st.subheader("2. 異常偵測矩陣")
@@ -389,6 +388,7 @@ else:
         st.error(f"❌ 讀取檔案時發生錯誤：{e}")
 
         st.warning("請確保您上傳的是有效的 Excel 檔，且格式與範本一致。")
+
 
 
 
