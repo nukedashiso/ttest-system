@@ -292,7 +292,7 @@ else:
         st.divider()
         st.subheader("2. 異常偵測矩陣")
         
-        status_map = {'red': 2, 'yellow': 1, 'green': 0, 'gray': -1}
+        status_map = {'red': 1, 'green': 0, 'gray': -1}
         res_df['status_code'] = res_df['status'].map(status_map)
         
         annotations = []
@@ -310,8 +310,7 @@ else:
             colorscale=[
                 [0,'#BDC3C7'], [0.25,'#BDC3C7'],   # -1：灰
                 [0.25,'#2ECC71'], [0.5,'#2ECC71'], #  0：綠
-                [0.5,'#F1C40F'], [0.75,'#F1C40F'], #  1：黃
-                [0.75,'#E74C3C'], [1,'#E74C3C']    #  2：紅
+                [0.5,'#E74C3C'], [1,'#E74C3C']    #  1：紅
             ],
             zmin=-1,
             zmax=2, 
@@ -348,7 +347,7 @@ else:
                 fig_est = make_subplots(rows=1, cols=2, column_widths=[0.6, 0.4], 
                                       subplot_titles=(f"{sel_it} 分佈", f"差異估計 ({res['test_method']})"))
                 
-                colors = {'施工前': 'gray', '施工期間': '#E74C3C' if res['status'] in ['red','yellow'] else '#2ECC71'}
+                colors = {'施工前': 'gray', '施工期間': '#E74C3C' if res['status'] in ['red'] else '#2ECC71'}
                 for p in ['施工前', '施工期間']:
                     sub = target_df[target_df['時期']==p]
                     if not sub.empty:
@@ -388,6 +387,7 @@ else:
         st.error(f"❌ 讀取檔案時發生錯誤：{e}")
 
         st.warning("請確保您上傳的是有效的 Excel 檔，且格式與範本一致。")
+
 
 
 
