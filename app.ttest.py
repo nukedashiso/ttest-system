@@ -428,6 +428,7 @@ else:
                         line_dash="dash", line_color="red", line_width=1.5,
                         annotation_text="法規下限", annotation_position="bottom right",
                         row=1, col=1
+                    )
                         
                 # --- 右圖：差異估計 (Difference Plot) ---
                 fig_est.add_hline(y=0, line_color="black", row=1, col=2)
@@ -455,6 +456,7 @@ else:
         st.error(f"❌ 讀取檔案時發生錯誤：{e}")
 
         st.warning("請確保您上傳的是有效的 Excel 檔，且格式與範本一致。")
+
 
 
 
