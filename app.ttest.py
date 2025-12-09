@@ -166,9 +166,13 @@ def perform_stats(df_sub):
     else:
         is_worse = diff > 0 
     # 燈號設定
-    if is_significant and is_worse:
+    if is_significant:
         status = "red"
-        status_text = "具顯著變化"
+        # 雖然都是紅燈，但建議文字還是要區分一下方向，不然使用者會困惑
+        if is_worse:
+            status_text = "具顯著變化"
+        else:
+            status_text = "具顯著變化" # 或是 "顯著改善"
     else:
         status = "green"
         status_text = "無顯著變化"
@@ -456,6 +460,7 @@ else:
         st.error(f"❌ 讀取檔案時發生錯誤：{e}")
 
         st.warning("請確保您上傳的是有效的 Excel 檔，且格式與範本一致。")
+
 
 
 
