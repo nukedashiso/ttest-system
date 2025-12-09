@@ -9,7 +9,7 @@ import io
 # ==========================================
 # 0. 頁面設定
 # ==========================================
-st.set_page_config(page_title="環境監測統計檢定系統 (Pro)", layout="wide")
+st.set_page_config(page_title="環境監測統計檢定系統", layout="wide")
 
 # ==========================================
 # 1. 資料處理核心邏輯 (Data Processing)
@@ -165,29 +165,19 @@ def perform_stats(df_sub):
         is_worse = True 
     else:
         is_worse = diff > 0 
-
-    is_violation = False
-    if pd.notna(upper_limit) and mean_dur > upper_limit: is_violation = True
-    if pd.notna(lower_limit) and mean_dur < lower_limit: is_violation = True
-    
-    status = "green"
-    status_text = "正常"
-    
-    if is_violation:
+    # 燈號設定
+    if is_significant and is_worse:
         status = "red"
-        status_text = "數值違規/超標"
-    elif is_significant and is_worse:
-        status = "yellow"
-        status_text = "顯著變差 (預警)"
+        status_text = "具顯著變化"
     else:
         status = "green"
-        status_text = "無顯著異常"
+        status_text = "無顯著變化"
 
     return {
         'mean_pre': mean_pre, 'mean_dur': mean_dur, 'diff': diff,
         'p_val': p_val, 'ci_lower': ci_lower, 'ci_upper': ci_upper,
         'test_method': test_method, 'status': status, 'status_text': status_text,
-        'lower_limit': lower_limit, 'upper_limit': upper_limit, 'unit': unit
+        'unit': unit
     }
 
 # ==========================================
@@ -216,7 +206,7 @@ st.sidebar.info("""
 # ==========================================
 # 3. 主畫面邏輯
 # ==========================================
-st.title("🛡️ 環境監測智能統計系統 (MDL Pro版)")
+st.title("🛡️ 環境監測智能統計系統")
 
 if uploaded_file is None:
     st.info("👈 請先下載範本，填入數據後上傳。")
@@ -295,9 +285,9 @@ else:
         st.subheader("1. 監測總覽")
         c1, c2, c3, c4 = st.columns(4)
         if 'status' in res_df.columns:
-            c1.metric("🔴 違規/超標", len(res_df[res_df['status'] == 'red']))
-            c2.metric("🟡 顯著變差", len(res_df[res_df['status'] == 'yellow']))
-            c3.metric("🟢 正常/改善", len(res_df[res_df['status'] == 'green']))
+            c1.metric("🔴 具顯著變化/超標", len(res_df[res_df['status'] == 'red']))
+            c2.metric("🟡 具顯著變化", len(res_df[res_df['status'] == 'yellow']))
+            c3.metric("🟢 無顯著變化", len(res_df[res_df['status'] == 'green']))
             c4.metric("⚪ 數據不足", len(res_df[res_df['status'] == 'gray']))
 
         st.divider()
@@ -319,14 +309,10 @@ else:
             x=res_df['測站'], 
             y=res_df['測項'],
             colorscale=[
-                [0,'#BDC3C7'],
-                [0.25,'#BDC3C7'],
-                [0.25,'#2ECC71'],
-                [0.5,'#2ECC71'],
-                [0.5,'#F1C40F'],
-                [0.75,'#F1C40F'],
-                [0.75,'#E74C3C'],
-                [1,'#E74C3C']
+                [0,'#BDC3C7'], [0.25,'#BDC3C7'],   # -1：灰
+                [0.25,'#2ECC71'], [0.5,'#2ECC71'], #  0：綠
+                [0.5,'#F1C40F'], [0.75,'#F1C40F'], #  1：黃
+                [0.75,'#E74C3C'], [1,'#E74C3C']    #  2：紅
             ],
             zmin=-1,
             zmax=2, 
@@ -403,6 +389,7 @@ else:
         st.error(f"❌ 讀取檔案時發生錯誤：{e}")
 
         st.warning("請確保您上傳的是有效的 Excel 檔，且格式與範本一致。")
+
 
 
 
