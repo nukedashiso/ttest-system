@@ -61,7 +61,7 @@ def process_censored_data(row):
     val_str = str(val).strip().upper()
     
     # 2. 處理 "ND"
-    if "ND" in val_str:
+    if "ND" or "N.D." in val_str:
         if pd.notna(mdl):
             return mdl # 依需求：ND採用MDL
         else:
@@ -380,5 +380,6 @@ else:
         st.error(f"❌ 讀取檔案時發生錯誤：{e}")
 
         st.warning("請確保您上傳的是有效的 Excel 檔，且格式與範本一致。")
+
 
 
