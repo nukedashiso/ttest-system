@@ -101,8 +101,8 @@ def perform_stats(df_sub):
         return {'status': 'gray', 'status_text': '數據不足', 'p_val': 1.0, 'diff': 0}
 
     # Meta data
-    lower_limit = df_sub['法規下限'].iloc[0]
-    upper_limit = df_sub['法規上限'].iloc[0]
+    lower_limit = df_sub['法規下限'].iloc[0] if '法規下限' in df_sub.columns else np.nan
+    upper_limit = df_sub['法規上限'].iloc[0] if '法規上限' in df_sub.columns else np.nan
     unit = df_sub['單位'].iloc[0] if pd.notna(df_sub['單位'].iloc[0]) else ""
     item_name = df_sub['測項'].iloc[0]
 
@@ -177,7 +177,9 @@ def perform_stats(df_sub):
         'mean_pre': mean_pre, 'mean_dur': mean_dur, 'diff': diff,
         'p_val': p_val, 'ci_lower': ci_lower, 'ci_upper': ci_upper,
         'test_method': test_method, 'status': status, 'status_text': status_text,
-        'unit': unit
+        'unit': unit,
+        'lower_limit': lower_limit,
+        'upper_limit : upper_limit
     }
 
 # ==========================================
@@ -290,53 +292,93 @@ else:
             c3.metric("⚪ 數據不足", len(res_df[res_df['status'] == 'gray']))
 
         st.divider()
+=============================================================================================================================        
         st.subheader("2. 異常偵測矩陣")
-        
-        status_map = {'red': 1, 'green': 0, 'gray': -1}
+         # 1. 數據映射 (0:灰, 1:綠, 2:紅)
+        status_map = {'gray': 0, 'green': 1, 'red': 2}
         res_df['status_code'] = res_df['status'].map(status_map)
         
+        # 2. 準備文字標註 (星星)
         annotations = []
         for idx, row in res_df.iterrows():
             symbol = ""
             if row['status']=='gray': symbol="N/A"
             elif row['p_val']<0.05: symbol="*"
-            annotations.append(dict(x=row['測站'], y=row['測項'], text=symbol, showarrow=False,
-                                  font=dict(color='white' if row['status'] in ['red','green'] else 'black')))
+            annotations.append(
+                dict(
+                    x=row['測站'], 
+                    y=row['測項'], 
+                    text=symbol, 
+                    showarrow=False,
+                    font=dict(color='white' if row['status'] == 'red' else 'black',
+                             size = 14)
+                ))
+            
+        # 3. 定義顏色 (與下方 Legend 一致)
+        color_map = {
+            'gray': '#BDC3C7',  # 灰
+            'green': '#2ECC71', # 綠
+            'red': '#E74C3C'    # 紅
+            
+        # 4. 建立熱力圖 (關閉原本的 Colorbar)
+        fig_h = go.Figure()
 
-        fig_h = go.Figure(data=go.Heatmap(
+        fig_h.add_trace(go.Heatmap(
             z=res_df['status_code'], 
             x=res_df['測站'], 
             y=res_df['測項'],
+            # 對應 0, 1, 2 的離散色階
             colorscale=[
-                [0,'#BDC3C7'], [0.25,'#BDC3C7'],   # -1：灰
-                [0.25,'#2ECC71'], [0.5,'#2ECC71'], #  0：綠
-                [0.5,'#E74C3C'], [1,'#E74C3C']    #  1：紅
+                [0.0, color_map['gray']],  [0.33, color_map['gray']],
+                [0.33, color_map['green']], [0.66, color_map['green']],
+                [0.66, color_map['red']],   [1.0, color_map['red']]
             ],
-            zmin=-1,
-            zmax=2, 
-            hovertemplate="狀態: %{text}", 
+            zmin=0, zmax=2,
+            xgap=2, ygap=2,
             text=res_df['status_text'],
-            xgap = 2,  #數值愈大，線條越粗
-            ygap = 2,   #數值愈大，線條越粗
-            
-            # 👇 [新增] 自定義 Color Bar 的刻度文字
-            colorbar=dict(tickvals=[-1, 0, 1],  # 指定刻度位置
-                          ticktext=['數據不足', '無顯著變化', '具顯著變化'], # 指定對應文字
-                          title="狀態說明",
-                          tickfont=dict(size=14)
-                         )
+            hovertemplate="狀態: %{text}<extra></extra>",
+            showscale=False  # 🚫 關鍵：隱藏原本的右側 Bar
         ))
-        
-        fig_h.update_layout(
-            annotations=annotations,
-            height=400,
-            plot_bgcolor = 'white',  #確保背景是白色，這樣gap就會變成白線
-            margin = dict(l = 0, r= 0, t = 10, b= 0),
-            xaxis = dict(showgrid=False, zeroline=False),
-            yaxis = dict(showgrid=False, zeroline=False)
-        )
-        st.plotly_chart(fig_h, use_container_width=True)
 
+        # 5. [新增] 製作自定義圖例 (使用虛擬的 Scatter 點)
+        # 這樣做可以讓 Plotly 生成標準的 "圓點+文字" 圖例
+        legend_items = [
+            ('數據不足', color_map['gray']),
+            ('無顯著變化', color_map['green']),
+            ('具顯著變化', color_map['red'])
+        ]
+        
+        for label, color in legend_items:
+            fig_h.add_trace(go.Scatter(
+                x=[None], y=[None], # 不畫出實際點
+                mode='markers',
+                marker=dict(size=12, color=color),
+                name=label,
+                legendgroup='status', # 設為同一組
+                showlegend=True
+            ))
+
+        # 6. 設定 Layout
+        fig_h.update_layout(
+            annotations=annotations, 
+            height=400, 
+            plot_bgcolor='white',
+            margin=dict(l=0, r=0, t=0, b=0),
+            xaxis=dict(showgrid=False, zeroline=False), 
+            yaxis=dict(showgrid=False, zeroline=False),
+            # 設定圖例位置 (水平排列，置於上方)
+            legend=dict(
+                orientation="h",
+                yanchor="bottom", y=1.02,
+                xanchor="right", x=1,
+                title_text="", # 不顯示標題
+                font=dict(size=14)
+            )
+        )
+
+        st.plotly_chart(fig_h, use_container_width=True)
+        st.caption("* : p<0.05 (標註星號者代表具有統計顯著差異)")
+=====================================================================================================================
         st.divider()
         st.subheader("3. 詳細檢定分析")
         c_s1, c_s2 = st.columns(2)
@@ -354,21 +396,39 @@ else:
                 fig_est = make_subplots(rows=1, cols=2, column_widths=[0.6, 0.4], 
                                       subplot_titles=(f"{sel_it} 分佈", f"差異估計 ({res['test_method']})"))
                 
-                colors = {'施工前': 'gray', '施工期間': '#E74C3C' if res['status'] in ['red'] else '#2ECC71'}
+                plot_color = '#E74C3C' if res['status'] == 'red' else '#2ECC71'
+                colors = {'施工前': 'gray', '施工期間': plot_color}
                 for p in ['施工前', '施工期間']:
                     sub = target_df[target_df['時期']==p]
                     if not sub.empty:
                         fig_est.add_trace(go.Box(
                             y=sub['數值'], x=sub['時期'], name=p, boxpoints='all',
-                            jitter=0.5, pointpos=-1.8, marker=dict(color=colors.get(p)),
-                            line=dict(color=colors.get(p)), showlegend=False,
+                            jitter=0.5, pointpos=-1.8, 
+                            marker=dict(color=colors.get(p)),
+                            line=dict(color=colors.get(p)), 
+                            showlegend=False,
                             text=sub['數值_原始'],
                             hovertemplate="轉化數值: %{y}<br>原始輸入: %{text}"
                         ), row=1, col=1)
 
-                if pd.notna(res['upper_limit']):
-                    fig_est.add_hline(y=res['upper_limit'], line_dash="dash", line_color="red", row=1, col=1)
-
+                # 檢查 upper_limit 是否存在且有效
+                if 'upper_limit' in res and pd.notna(res['upper_limit']):
+                    fig_est.add_hline(
+                        y=res['upper_limit'], 
+                        line_dash="dash", line_color="red", line_width=1.5,
+                        annotation_text="法規上限", annotation_position="top right",
+                        row=1, col=1
+                    )
+                
+                # 檢查 lower_limit 是否存在且有效
+                if 'lower_limit' in res and pd.notna(res['lower_limit']):
+                    fig_est.add_hline(
+                        y=res['lower_limit'], 
+                        line_dash="dash", line_color="red", line_width=1.5,
+                        annotation_text="法規下限", annotation_position="bottom right",
+                        row=1, col=1
+                        
+                # --- 右圖：差異估計 (Difference Plot) ---
                 fig_est.add_hline(y=0, line_color="black", row=1, col=2)
                 
                 # CI 繪圖 (若 constant 則畫點不畫線)
@@ -394,6 +454,7 @@ else:
         st.error(f"❌ 讀取檔案時發生錯誤：{e}")
 
         st.warning("請確保您上傳的是有效的 Excel 檔，且格式與範本一致。")
+
 
 
 
