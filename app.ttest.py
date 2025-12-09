@@ -332,8 +332,8 @@ else:
             zmax=2, 
             hovertemplate="狀態: %{text}", 
             text=res_df['status_text'],
-            xgap = 5,  #數值愈大，線條越粗
-            ygap = 5   #數值愈大，線條越粗
+            xgap = 2,  #數值愈大，線條越粗
+            ygap = 2   #數值愈大，線條越粗
         ))
         
         fig_h.update_layout(
@@ -403,6 +403,7 @@ else:
         st.error(f"❌ 讀取檔案時發生錯誤：{e}")
 
         st.warning("請確保您上傳的是有效的 Excel 檔，且格式與範本一致。")
+
 
 
 
